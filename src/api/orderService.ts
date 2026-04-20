@@ -59,3 +59,10 @@ export const updateOrderStatus = (orderId, newStatus) => {
   localStorage.setItem('capstone_orders', JSON.stringify(updatedOrders));
   return updatedOrders; // Return the new list so the React component can update
 };
+
+export const deleteOrder = (orderId: string) => {
+  const orders = getOrders();
+  const updatedOrders = orders.filter(order => order.id !== orderId);
+  localStorage.setItem('capstone_orders', JSON.stringify(updatedOrders));
+  return updatedOrders;
+};

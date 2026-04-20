@@ -1,26 +1,37 @@
 import { useState, useEffect } from 'react';
-import { getOrders } from '../api/orderService';
-import { ClipboardList, Search, Clock } from 'lucide-react';
+import { getOrders, deleteOrder } from '../api/orderService';
+import { ClipboardList, Search, Clock, Eye, Trash2, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const CustomerOrderHistory = () => {
   const [myOrders, setMyOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = () => {
     const allOrders = getOrders();
     const myOrderIds = JSON.parse(localStorage.getItem('my_order_ids') || '[]');
     
-    // Anonymous customers see orders matching IDs in their local storage
-    // Filter orders that are NOT 'Pending' (those are in My Bill)
     const userOrders = allOrders.filter(order => 
       myOrderIds.includes(order.id) && 
       order.status !== 'Pending'
     );
     
-    // Sort by date descending
     userOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     setMyOrders(userOrders);
-  }, []);
+  };
+
+  const handleDelete = (orderId: string) => {
+    if (window.confirm('Are you sure you want to delete this order from your history?')) {
+      deleteOrder(orderId);
+      // Remove from my_order_ids as well if needed, but the filtered result won't show it anyway if deleted from capstone_orders
+      fetchOrders();
+    }
+  };
 
   const filteredOrders = myOrders.filter(order => 
     order.id.toLowerCase().includes(searchTerm.toLowerCase())
@@ -82,7 +93,23 @@ const CustomerOrderHistory = () => {
                 </div>
               </div>
               
-              <div className="flex flex-col md:items-end gap-3">
+              <div className="flex flex-col md:items-end gap-3 shrink-0">
+                <div className="flex items-center gap-2">
+                   <button 
+                    onClick={() => setSelectedOrder(order)}
+                    className="p-2 bg-gray-50 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
+                    title="View Details"
+                  >
+                    <Eye size={20} />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(order.id)}
+                    className="p-2 bg-gray-50 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                    title="Delete Order"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
                 <div className="flex -space-x-2">
                   {order.items.slice(0, 3).map((item, i) => (
                     <div key={`${item.name}-${i}`} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 overflow-hidden">
@@ -101,6 +128,83 @@ const CustomerOrderHistory = () => {
           ))
         )}
       </div>
+
+      {/* Order Detail Modal */}
+      <AnimatePresence>
+        {selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedOrder(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white w-full max-w-lg rounded-[2.5rem] shadow-2xl relative z-10 overflow-hidden"
+            >
+              <div className="p-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+                <div>
+                  <h3 className="font-bold text-dark">Order Details</h3>
+                  <p className="text-[10px] font-mono text-gray-400 uppercase tracking-tighter">{selectedOrder.id}</p>
+                </div>
+                <button 
+                  onClick={() => setSelectedOrder(null)}
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors text-gray-400"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="space-y-6">
+                  {selectedOrder.items.map((item, idx) => (
+                    <div key={idx} className="flex gap-4 items-center">
+                      <div className="w-16 h-16 rounded-2xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100 p-1">
+                        <img 
+                          src={item.image || 'https://picsum.photos/seed/food/200/200'} 
+                          alt={item.name} 
+                          className="w-full h-full object-cover rounded-xl"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-dark text-sm">{item.name}</h4>
+                        <p className="text-xs text-gray-400">₱{item.price} x {item.quantity}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-dark">₱{item.price * item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-8 pt-8 border-t border-dashed border-gray-100 flex justify-between items-end">
+                   <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                      selectedOrder.status === 'Completed' ? 'bg-green-100 text-green-700' :
+                      'bg-primary/10 text-primary'
+                    }`}>
+                      {selectedOrder.status}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Total Bill</p>
+                    <p className="text-3xl font-black text-primary tracking-tighter">₱{selectedOrder.total}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="p-6 bg-gray-50/50 border-t border-gray-50 text-center">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Ordered on {new Date(selectedOrder.date).toLocaleString()}</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
