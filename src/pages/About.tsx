@@ -9,14 +9,6 @@ const About = () => {
   const { user } = useContext(AuthContext) as any;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      navigate('/admin');
-    }
-  }, [user, navigate]);
-
-  if (user) return null;
-
   const pillars = [
     {
       title: "Community Hub",
@@ -142,7 +134,7 @@ const About = () => {
               </div>
               <h2 className="text-4xl md:text-5xl font-bold text-dark mb-8 tracking-tight">Meet the Kitchen Crew</h2>
               <p className="text-xl text-gray-500 leading-relaxed mb-10 font-medium">
-                Our team is the heart of Gip's Kitchen. From our skilled chefs to our attentive service staff, we are a family dedicated to making you feel at home.
+                Our team is the heart of Gip's Kitchen. From our skilled chefs to our attentive service, we are a family dedicated to making you feel at home.
               </p>
               <div className="space-y-6">
                 <div className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">

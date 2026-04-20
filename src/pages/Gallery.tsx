@@ -9,14 +9,6 @@ const Gallery = () => {
   const { user } = useContext(AuthContext) as any;
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      navigate('/admin');
-    }
-  }, [user, navigate]);
-
-  if (user) return null;
-
   const categories = [
     {
       id: 'plates',

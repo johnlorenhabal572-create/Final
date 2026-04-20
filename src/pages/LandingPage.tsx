@@ -10,16 +10,10 @@ const LandingPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/admin');
-      }
+    if (user && user.role === 'admin') {
+      navigate('/dashboard');
     }
   }, [user, navigate]);
-
-  if (user) return null;
 
   return (
     <div className="min-h-screen bg-white">

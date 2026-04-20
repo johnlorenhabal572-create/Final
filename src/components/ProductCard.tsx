@@ -27,7 +27,12 @@ const ProductCard = ({ product }) => {
           <h3 className="font-bold text-dark">{product.name}</h3>
           <span className="text-primary font-bold">₱{product.price}</span>
         </div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">{product.category}</p>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{product.category}</p>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest ${product.stock <= 5 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-500'}`}>
+            Stock: {product.stock}
+          </span>
+        </div>
       </div>
       <button 
         onClick={() => isAvailable && addToCart(product)}

@@ -11,7 +11,11 @@ const CustomerOrderHistory = () => {
     const myOrderIds = JSON.parse(localStorage.getItem('my_order_ids') || '[]');
     
     // Anonymous customers see orders matching IDs in their local storage
-    const userOrders = allOrders.filter(order => myOrderIds.includes(order.id));
+    // Filter orders that are NOT 'Pending' (those are in My Bill)
+    const userOrders = allOrders.filter(order => 
+      myOrderIds.includes(order.id) && 
+      order.status !== 'Pending'
+    );
     
     // Sort by date descending
     userOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -24,15 +28,6 @@ const CustomerOrderHistory = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-4xl">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="bg-primary/10 p-3 rounded-2xl text-primary">
-          <ClipboardList size={32} />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">My Orders</h1>
-          <p className="text-gray-500 text-sm font-medium">Track your recent food orders</p>
-        </div>
-      </div>
       
       {/* Search Box */}
       {myOrders.length > 0 && (
@@ -74,6 +69,7 @@ const CustomerOrderHistory = () => {
                       order.status === 'Completed' ? 'bg-green-100 text-green-700' :
                       order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
                       order.status === 'Processing' ? 'bg-blue-100 text-blue-700' :
+                      order.status === 'Ready to Pickup' ? 'bg-purple-100 text-purple-700' :
                       'bg-yellow-100 text-yellow-700'
                     }`}>
                       {order.status}
@@ -89,7 +85,7 @@ const CustomerOrderHistory = () => {
               <div className="flex flex-col md:items-end gap-3">
                 <div className="flex -space-x-2">
                   {order.items.slice(0, 3).map((item, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 overflow-hidden">
+                    <div key={`${item.name}-${i}`} className="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-600 overflow-hidden">
                       {item.image ? <img src={item.image} alt="" className="w-full h-full object-cover" /> : item.name.charAt(0)}
                     </div>
                   ))}

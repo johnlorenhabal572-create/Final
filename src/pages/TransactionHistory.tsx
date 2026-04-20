@@ -1,12 +1,15 @@
 import { useState, useEffect, useContext } from 'react';
 import { getOrders } from '../api/orderService';
 import { AuthContext } from '../context/AuthContext';
+import { motion, AnimatePresence } from 'motion/react';
+import { X, Eye, Receipt as ReceiptIcon, History as HistoryIcon, Search as SearchIcon } from 'lucide-react';
 
 const TransactionHistory = () => {
   const { user } = useContext(AuthContext) as any;
   const [myOrders, setMyOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('Completed');
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     // Staff/Admin see all orders in the system
@@ -25,15 +28,6 @@ const TransactionHistory = () => {
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <div className="flex items-center gap-3 mb-8">
-        <div className="bg-primary/10 p-3 rounded-2xl text-primary">
-          <History size={32} />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Transaction History</h1>
-          <p className="text-gray-500 text-sm font-medium">View all past orders and transactions</p>
-        </div>
-      </div>
       
       {/* Search and Filter Controls */}
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8 flex flex-col md:flex-row gap-4">
@@ -94,14 +88,68 @@ const TransactionHistory = () => {
                 </div>
               </div>
               
-              <div className="flex flex-col md:items-end gap-1">
-                <p className="text-2xl font-bold text-primary tracking-tighter">₱{order.total}</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{order.items.length} Item(s) • {order.paymentMethod}</p>
+              <div className="flex flex-col md:flex-row md:items-center gap-4">
+                {order.paymentScreenshot && (
+                  <button 
+                    onClick={() => setPreviewImage(order.paymentScreenshot)}
+                    className="group/receipt relative block shrink-0"
+                  >
+                    <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                      <img 
+                        src={order.paymentScreenshot} 
+                        alt="Receipt" 
+                        className="w-full h-full object-cover transition-transform group-hover/receipt:scale-110" 
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-dark/40 opacity-0 group-hover/receipt:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                      <Eye className="text-white" size={12} />
+                    </div>
+                  </button>
+                )}
+                <div className="flex flex-col md:items-end gap-1">
+                  <p className="text-2xl font-bold text-primary tracking-tighter">₱{order.total}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{order.items.length} Item(s) • {order.paymentMethod}</p>
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      <AnimatePresence>
+        {previewImage && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-dark/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10"
+            onClick={() => setPreviewImage(null)}
+          >
+            <button 
+              className="absolute top-6 right-6 text-white/50 hover:text-white bg-white/10 p-2 rounded-full transition-colors"
+              onClick={() => setPreviewImage(null)}
+            >
+              <X size={32} />
+            </button>
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="max-w-full max-h-full sm:max-w-3xl flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <img 
+                src={previewImage} 
+                alt="Receipt Preview" 
+                className="max-w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl border-4 border-white/10"
+                referrerPolicy="no-referrer"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

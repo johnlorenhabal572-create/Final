@@ -43,21 +43,21 @@ function App() {
                 <Route path="/my-orders" element={<CustomerOrderHistory />} />
                 <Route path="/my-bill" element={<MyBill />} />
                 
-                {/* Protected Route: Transaction history only for logged in staff/admin */}
+                {/* Protected Route: Transaction history only for logged in admin */}
                 <Route path="/history" element={
                   <ProtectedRoute>
                     <OrderHistory />
                   </ProtectedRoute>
                 } />
 
-                {/* Customer Payment: for staff */}
+                {/* Customer Payment: for admin */}
                 <Route path="/customer-payment" element={
                   <ProtectedRoute>
                     <CustomerPayment />
                   </ProtectedRoute>
                 } />
 
-                {/* POS: Point of Sale for staff */}
+                {/* POS: Point of Sale for admin */}
                 <Route path="/pos" element={
                   <ProtectedRoute>
                     <POS />
@@ -106,7 +106,7 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Protected Route: ONLY admins/staff can see the dashboard */}
+                {/* Protected Route: ONLY admins can see the dashboard */}
                 <Route path="/admin" element={
                   <ProtectedRoute requireAdmin={true}>
                     <AdminDashboard />

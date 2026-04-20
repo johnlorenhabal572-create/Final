@@ -1,16 +1,24 @@
 import { useContext } from 'react';
 import { CartContext } from '../context/CartContext';
+import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const CartModal = ({ isOpen, onClose }) => {
   const { cart, getCartTotal, removeFromCart } = useContext(CartContext) as any; 
+  const { user } = useContext(AuthContext) as any;
   const navigate = useNavigate();
 
   const handleCheckout = () => {
-    onClose(); 
-    navigate('/checkout'); 
+    if (cart.length > 0) {
+      onClose();
+      if (!user) {
+        navigate('/login', { state: { from: { pathname: '/checkout' } } });
+      } else {
+        navigate('/checkout');
+      }
+    }
   };
 
   return (
@@ -113,12 +121,6 @@ const CartModal = ({ isOpen, onClose }) => {
                 className="w-full bg-primary text-white py-5 rounded-2xl hover:bg-opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed font-bold text-lg shadow-lg shadow-primary/20 transition-all transform active:scale-95 flex items-center justify-center gap-3"
               >
                 Proceed to Checkout
-                <motion.div
-                  animate={{ x: [0, 5, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                >
-                  <X size={20} className="rotate-45" />
-                </motion.div>
               </button>
             </div>
           </motion.aside>

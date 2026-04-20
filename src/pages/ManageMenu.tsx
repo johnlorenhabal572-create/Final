@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getProducts, saveProducts, addProduct, updateProduct, deleteProduct } from '../api/productService';
+import { getProducts, saveProducts, addProduct, updateProduct, deleteProduct, CATEGORIES } from '../api/productService';
 import { getInventory } from '../api/inventoryService';
 import { motion, AnimatePresence } from 'motion/react';
 import { Plus, Trash2, Edit2, Save, X, Utensils, Link as LinkIcon, Image as ImageIcon, Upload } from 'lucide-react';
@@ -14,9 +14,10 @@ const ManageMenu = () => {
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
-    category: 'Main Course',
+    category: 'Soups',
     image: '',
     inventoryLinkId: '',
+    stock: 0,
     status: 'Available'
   });
 
@@ -29,7 +30,7 @@ const ManageMenu = () => {
     if (!formData.name) return;
     const newProd = addProduct({
       ...formData,
-      stock: 100, // Default stock
+      stock: formData.stock || 0,
       inventoryLinkId: formData.inventoryLinkId || null
     });
     setProducts([...products, newProd]);
@@ -50,12 +51,13 @@ const ManageMenu = () => {
       category: product.category,
       image: product.image,
       inventoryLinkId: product.inventoryLinkId || '',
+      stock: product.stock || 0,
       status: product.status || 'Available'
     });
   };
 
   const handleSaveEdit = () => {
-    const updated = { ...formData, id: editingId, stock: 100 };
+    const updated = { ...formData, id: editingId };
     updateProduct(updated);
     setProducts(products.map(p => p.id === editingId ? updated : p));
     setEditingId(null);
@@ -66,9 +68,10 @@ const ManageMenu = () => {
     setFormData({
       name: '',
       price: 0,
-      category: 'Main Course',
+      category: 'Soups',
       image: IMAGES.PRODUCT_PLACEHOLDER,
       inventoryLinkId: '',
+      stock: 0,
       status: 'Available'
     });
   };
@@ -88,7 +91,7 @@ const ManageMenu = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-          <div>
+          <div className="hidden">
             <h1 className="text-2xl sm:text-3xl font-bold text-dark tracking-tight">Manage Menu</h1>
             <p className="text-gray-500 text-xs sm:text-sm mt-1">Add, edit, or remove items from your customer and POS menus.</p>
           </div>
@@ -147,11 +150,9 @@ const ManageMenu = () => {
                       onChange={(e) => setFormData({...formData, category: e.target.value})}
                       className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-primary text-sm bg-white"
                     >
-                      <option value="Main Course">Main Course</option>
-                      <option value="Seafood">Seafood</option>
-                      <option value="Supplement">Supplement</option>
-                      <option value="Beverage">Beverage</option>
-                      <option value="Appetizer">Appetizer</option>
+                      {CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -202,6 +203,19 @@ const ManageMenu = () => {
                       </select>
                     </div>
                   </div>
+
+                  {!formData.inventoryLinkId && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Available Quantity (Manual)</label>
+                      <input 
+                        type="number" 
+                        value={formData.stock}
+                        onChange={(e) => setFormData({...formData, stock: parseInt(e.target.value) || 0})}
+                        className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:border-primary text-sm"
+                        placeholder="Current stock level"
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Availability Status</label>
@@ -270,13 +284,23 @@ const ManageMenu = () => {
                   <span className="text-primary font-bold">₱{product.price}</span>
                 </div>
                 {product.inventoryLinkId ? (
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-lg w-fit">
-                    <LinkIcon size={12} />
-                    Linked to {inventory.find(i => i.id === product.inventoryLinkId)?.name || 'Inventory'}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-green-600 uppercase tracking-widest bg-green-50 px-2 py-1 rounded-lg w-fit">
+                      <LinkIcon size={12} />
+                      Linked to {inventory.find(i => i.id === product.inventoryLinkId)?.name || 'Inventory'}
+                    </div>
+                    <div className="text-xs font-bold text-gray-600">
+                      Available: <span className={product.stock <= 5 ? 'text-red-500' : 'text-primary'}>{product.stock}</span> units
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                    Manual Stock Control
+                  <div className="flex flex-col gap-2">
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                      Manual Stock Control
+                    </div>
+                    <div className="text-xs font-bold text-gray-600">
+                      Available: <span className={product.stock <= 5 ? 'text-red-500' : 'text-primary'}>{product.stock}</span> units
+                    </div>
                   </div>
                 )}
               </div>

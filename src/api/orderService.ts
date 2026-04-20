@@ -1,8 +1,10 @@
 import { deductInventory } from './inventoryService';
+import { getProducts, saveProducts } from './productService';
 
 export const saveOrder = (orderData) => {
   const storedOrders = localStorage.getItem('capstone_orders');
   const orders = storedOrders ? JSON.parse(storedOrders) : [];
+  const products = getProducts();
 
   const newOrder = {
     ...orderData,
@@ -11,12 +13,21 @@ export const saveOrder = (orderData) => {
     status: orderData.status || 'Pending'
   };
 
-  // Deduct inventory if items are linked
+  // Deduct inventory if items are linked, else deduct from product stock
   newOrder.items.forEach((item: any) => {
     if (item.inventoryLinkId) {
       deductInventory(item.inventoryLinkId, item.quantity);
+    } else {
+      // Manual Stock Deduction
+      const productIdx = products.findIndex((p: any) => p.id === item.id);
+      if (productIdx !== -1) {
+        products[productIdx].stock = Math.max(0, products[productIdx].stock - item.quantity);
+      }
     }
   });
+  
+  // Save updated product stock for non-linked items
+  saveProducts(products);
 
   orders.push(newOrder);
   localStorage.setItem('capstone_orders', JSON.stringify(orders));

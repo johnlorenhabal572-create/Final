@@ -53,7 +53,7 @@ const ManageInventory = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <div>
+          <div className="hidden">
             <h1 className="text-3xl font-bold text-dark tracking-tight">Manage Inventory</h1>
             <p className="text-gray-500 text-sm mt-1">Track and manage your raw materials and stock.</p>
           </div>

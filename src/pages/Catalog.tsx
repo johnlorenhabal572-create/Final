@@ -1,22 +1,20 @@
 import { useState, useEffect, useContext } from 'react';
 import ProductCard from '../components/ProductCard';
-import { getProducts } from '../api/productService';
+import { getProducts, CATEGORIES } from '../api/productService';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Search } from 'lucide-react';
 
 const Catalog = () => {
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useContext(AuthContext) as any;
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      if (user.role === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/admin');
-      }
+    if (user && user.role !== 'customer') {
+      navigate('/dashboard');
       return;
     }
     // Fetch products from our local mock database on component mount
@@ -24,22 +22,31 @@ const Catalog = () => {
     setProducts(data);
   }, [user, navigate]);
 
-  if (user) return null;
+  if (user && user.role !== 'customer') return null;
 
-  // Extract unique categories
-  const categories = ['All', ...new Set(products.map(p => p.category))];
+  // Use fixed category list
+  const categories = ['All', ...CATEGORIES];
 
-  // Filter products based on selected category
+  // Filter products based on selected category and search term
   const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-    return matchesCategory;
+    return matchesSearch && matchesCategory;
   });
 
   return (
     <div className="container mx-auto p-6 py-12">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-bold text-dark mb-4 uppercase tracking-tight">Our <span className="text-primary">Menu</span></h1>
-        <div className="w-20 h-1 bg-primary mx-auto mb-8"></div>
+      <div className="text-center mb-12 max-w-2xl mx-auto">
+        <div className="relative mb-10 group">
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors" size={24} />
+          <input 
+            type="text" 
+            placeholder="What delicious dish are you looking for?" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-16 pr-8 py-6 rounded-[2rem] bg-white border border-gray-100 shadow-xl shadow-gray-100/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-lg font-medium text-dark placeholder:text-gray-300"
+          />
+        </div>
         
         {/* Category Filter Bar */}
         <div className="flex flex-wrap justify-center gap-3 mb-12">

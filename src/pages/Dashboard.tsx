@@ -27,7 +27,7 @@ const Dashboard = () => {
     .filter(o => o.status === 'Completed')
     .reduce((sum, o) => sum + o.total, 0);
   
-  const totalOrders = orders.length;
+  const readyToPickupOrders = orders.filter(o => o.status === 'Ready to Pickup').length;
   const lowStockCount = inventory.filter(item => item.quantity <= (item.lowStockThreshold || 10)).length;
 
   // Prepare Inventory Data for Chart
@@ -77,11 +77,11 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Total Orders */}
+          {/* Ready to Pickup Orders */}
           <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex justify-between items-center group hover:shadow-md transition-all">
             <div>
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Orders</p>
-              <h3 className="text-2xl font-bold text-dark tracking-tighter">{totalOrders}</h3>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Ready to Pickup Orders</p>
+              <h3 className="text-2xl font-bold text-dark tracking-tighter">{readyToPickupOrders}</h3>
             </div>
             <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <ShoppingBag size={24} />

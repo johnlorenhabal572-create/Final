@@ -19,11 +19,7 @@ const ReorderList = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-5xl mx-auto">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-dark tracking-tight">Reorder List</h1>
-          <p className="text-gray-500 text-sm mt-1">Items that need restocking to reach stable inventory levels.</p>
-        </header>
-
+        
         {/* Reorder List - Desktop Table */}
         <div className="hidden md:block bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse">

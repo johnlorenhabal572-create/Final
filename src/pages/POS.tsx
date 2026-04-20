@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { getProducts } from '../api/productService';
+import { getProducts, CATEGORIES } from '../api/productService';
 import { saveOrder } from '../api/orderService';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
@@ -20,7 +20,7 @@ const POS = () => {
     setProducts(getProducts());
   }, []);
 
-  const categories = ['All', ...new Set(products.map((p: any) => p.category))];
+  const categories = ['All', ...CATEGORIES];
 
   const filteredProducts = products.filter(p => {
     const searchLower = searchTerm.toLowerCase();
@@ -31,6 +31,13 @@ const POS = () => {
 
   const addToPosCart = (product) => {
     const existing = posCart.find(item => item.id === product.id);
+    const qtyInCart = existing ? existing.quantity : 0;
+
+    if (qtyInCart >= product.stock) {
+      showNotification(`Limited quantity: only ${product.stock} left.`);
+      return;
+    }
+
     if (existing) {
       setPosCart(posCart.map(item => 
         item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
@@ -48,8 +55,15 @@ const POS = () => {
   const updateQuantity = (productId, delta) => {
     setPosCart(posCart.map(item => {
       if (item.id === productId) {
-        const newQty = Math.max(1, item.quantity + delta);
-        return { ...item, quantity: newQty };
+        let newQty = item.quantity + delta;
+        
+        // Prevent manual increase beyond stock
+        if (delta > 0 && newQty > item.stock) {
+          showNotification(`Maximum available quantity reached.`);
+          return item;
+        }
+
+        return { ...item, quantity: Math.max(1, newQty) };
       }
       return item;
     }));
@@ -72,7 +86,7 @@ const POS = () => {
         phone: 'N/A',
         address: 'Dine-in / POS'
       },
-      userEmail: user?.email || 'staff@gipskitchen.com'
+      userEmail: user?.email || 'admin@gipskitchen.com'
     };
 
     saveOrder(orderData);
@@ -116,7 +130,7 @@ const POS = () => {
                     : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                 }`}
               >
-                {cat === 'Supplement' ? 'Supplements' : cat}
+                {cat}
               </button>
             ))}
           </div>
@@ -147,13 +161,16 @@ const POS = () => {
                       )}
                     </div>
                     <p className="text-[10px] sm:text-xs font-bold text-dark text-center leading-tight mb-1 line-clamp-2 h-8">{product.name}</p>
-                    <p className="text-primary font-bold text-xs sm:text-sm mb-2">₱{product.price}</p>
+                    <p className="text-primary font-bold text-xs sm:text-sm mb-1">₱{product.price}</p>
+                    <p className={`text-[9px] font-black uppercase mb-2 ${product.stock <= 5 ? 'text-red-500' : 'text-gray-400'}`}>
+                      Available: {product.stock}
+                    </p>
                     
                     <button
-                      onClick={() => isAvailable && addToPosCart(product)}
-                      disabled={!isAvailable}
+                      onClick={() => isAvailable && product.stock > 0 && addToPosCart(product)}
+                      disabled={!isAvailable || product.stock <= 0}
                       className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
-                        isAvailable 
+                        isAvailable && product.stock > 0
                           ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:scale-110 active:scale-95' 
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                       }`}
