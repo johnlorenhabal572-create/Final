@@ -29,6 +29,24 @@ const AdminDashboard = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate Daily Stats
+  const today = new Date().toDateString();
+  const completedOrders = orders.filter(o => o.status === 'Completed');
+  const todayOrders = completedOrders.filter(o => new Date(o.date).toDateString() === today);
+  
+  const todaySales = todayOrders.reduce((sum, o) => sum + o.total, 0);
+  const totalSales = completedOrders.reduce((sum, o) => sum + o.total, 0);
+
+  // Menu Rankings (All Time vs Today)
+  const getRankings = (orderList) => {
+    const counts = {};
+    orderList.forEach(o => o.items.forEach(i => counts[i.name] = (counts[i.name] || 0) + i.quantity));
+    return Object.entries(counts).sort((a: any, b: any) => b[1] - a[1]).slice(0, 3);
+  };
+
+  const todayRankings = getRankings(todayOrders);
+  const totalRankings = getRankings(completedOrders);
+
   const getStatusColor = (status) => {
     switch(status) {
       case 'Pending': return 'bg-yellow-50 text-yellow-700 border-yellow-100';
@@ -64,6 +82,34 @@ const AdminDashboard = () => {
                 {status}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Sales & Rankings Snapshots (Daily not reset every day) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Today's Revenue</p>
+            <h3 className="text-2xl font-black text-primary tracking-tighter">₱{todaySales.toLocaleString()}</h3>
+            <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase">Today only</p>
+          </div>
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm">
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Total Sales</p>
+            <h3 className="text-2xl font-black text-dark tracking-tighter">₱{totalSales.toLocaleString()}</h3>
+            <p className="text-[10px] text-gray-400 font-bold mt-1 uppercase">Cumulative Record</p>
+          </div>
+          <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm col-span-1 lg:col-span-2">
+            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">Daily Top Sellers</p>
+            <div className="flex flex-wrap gap-2">
+              {todayRankings.length === 0 ? (
+                <span className="text-[10px] text-gray-300 font-bold uppercase italic">No sales today yet</span>
+              ) : (
+                todayRankings.map(([name, count]: any) => (
+                  <span key={name} className="bg-gray-50 px-3 py-1.5 rounded-xl text-[10px] font-black text-dark border border-gray-100">
+                    {name} <span className="text-primary ml-1">{count}x</span>
+                  </span>
+                ))
+              )}
+            </div>
           </div>
         </div>
         
